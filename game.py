@@ -1,4 +1,6 @@
 from bearlibterminal import terminal
+from player import Player
+from world import World
 import time
 
 
@@ -17,6 +19,9 @@ class Game:
 
         # set up tick counting
         self.next_game_tick = self.elapsed_time()
+
+        # Place the player
+        World.add_player(Player())
 
     def iterate(self):
         """Perform one iteration of the game loop."""
@@ -38,11 +43,10 @@ class Game:
         """Render all on-screen objects."""
         terminal.clear()
 
-        terminal.printf(1, 1, str(interpolation))
+        World.active_player.render_screen(World)
 
         terminal.refresh()
 
     def elapsed_time(self):
-        """Return the amount of milliseconds that have elapsed since the system has started.  Will likely break upon
-        around 24.855 hours of concurrent execution"""
+        """Return the amount of milliseconds that have elapsed since the system has started.  Will likely break upon around 24.855 hours of concurrent execution, but whatever."""
         return time.process_time() * 1000
