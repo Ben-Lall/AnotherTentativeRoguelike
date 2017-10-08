@@ -1,4 +1,4 @@
-from bearlibterminal import terminal
+from bearlibterminal import terminal as blt
 from player import Player
 from world import World
 import time
@@ -14,8 +14,8 @@ class Game:
 
     def __init__(self):
         # open terminal
-        terminal.open()
-        terminal.refresh()
+        blt.open()
+        blt.refresh()
 
         # set up tick counting
         self.next_game_tick = self.elapsed_time()
@@ -41,11 +41,11 @@ class Game:
 
     def render(self, interpolation):
         """Render all on-screen objects."""
-        terminal.clear()
+        blt.clear()
 
         World.active_player.render_screen(World)
 
-        terminal.refresh()
+        blt.refresh()
 
     def elapsed_time(self):
         """Return the amount of milliseconds that have elapsed since the system has started.  Will likely break upon around 24.855 hours of concurrent execution, but whatever."""

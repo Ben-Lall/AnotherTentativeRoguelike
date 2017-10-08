@@ -1,4 +1,4 @@
-from bearlibterminal import terminal
+from bearlibterminal import terminal as blt
 
 
 class Renderer:
@@ -6,21 +6,23 @@ class Renderer:
         self.x_offset = 0
         self.y_offset = 0
 
-    def render(self, x, y, symbol, color, background, dx=0, dy=0):
+    def render(self, x, y, symbol, layer, bkcolor=None):
         """Render the given symbol.  May modify the state of terminal.color or terminal.bkcolor."""
-        if background:
-            terminal.bkcolor(color)
-        else:
-            terminal.color(color)
-        draw_x, draw_y = x + self.x_offset, y + self.y_offset
-        terminal.put_ext(draw_x, draw_y, dx, dy, symbol, None)
+        # Set terminal
+        blt.layer(layer)
+        if bkcolor is not None:
+            blt.bkcolor(bkcolor)
+        blt.color(symbol.color)
 
-    def render_composite(self, x, y, symbol, dx=0, dy=0):
+        draw_x, draw_y = x + self.x_offset, y + self.y_offset
+        blt.put_ext(draw_x, draw_y, symbol.dx, symbol.dy, symbol.char, None)
+
+    def render_composite(self, x, y, symbol, layer, bkcolor=None):
         """Render a composite symbol."""
-        terminal.composition(terminal.TK_ON)
-        for c in symbol:
-            self.render(x, y, c.symbol, c.color, c.dx, c.dy)
-        terminal.composition(terminal.TK_OFF)
+        blt.composition(blt.TK_ON)
+        for s in symbol:
+            self.render(x, y, s, layer, bkcolor)
+        blt.composition(blt.TK_OFF)
 
     def transform(self, camera):
         """Transform this Renderer's offset to match the camera."""

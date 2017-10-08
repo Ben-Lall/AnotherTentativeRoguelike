@@ -12,8 +12,8 @@ class Camera:
         for i in range(0, world.FLOOR_HEIGHT):
             for j in range(0, world.FLOOR_WIDTH):
                 tile = world.current_floor[i][j]
-                renderer.render(j, i, ' ', tile.color, True)
+                tile.render(j, i, renderer)
 
         # Draw all visible gameplay objects (temporary implementation)
         for e in world.current_floor_elements:
-            renderer.render(e.x, e.y, e.symbol, e.color, False)
+            e.render(renderer)
