@@ -1,19 +1,54 @@
+import utilities as util
+import math
+from bearlibterminal import terminal as blt
+
+
 class Camera:
     """A camera that is used for rendering a specific region."""
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, world):
+        self.world = world
+        self.width = blt.state(blt.TK_WIDTH)
+        self.height = blt.state(blt.TK_HEIGHT)
         self.x = x
-        self. y = y
+        self.y = y
+        self.pan(0, 0)
 
-    def render(self, world, renderer):
+    def pan(self, dx, dy):
+        """Pan the camera in the direction specified by (dx, dy)."""
+        self.x = int(util.clamp(self.x + dx, self.width / 2, self.world.FLOOR_WIDTH - self.width / 2))
+        self.y = int(util.clamp(self.y + dy, self.height / 2, self.world.FLOOR_HEIGHT - self.height / 2))
+
+    def move_to(self, x, y):
+        """Move the camera as close to the given coordinates as possible, while staying within the acceptable world bounds."""
+        self.x = x
+        self.y = y
+        self.pan(0, 0)
+
+    def is_within_bounds(self, x, y):
+        """Determine if the given coordinates (x, y) are within the visible boundaries of this camera."""
+        (draw_x, draw_y) = self.get_draw_start_pos()
+        return draw_x <= x <= draw_x + self.width and draw_y <= y <= draw_y + self.height
+
+    def get_draw_start_pos(self):
+        return (int(util.clamp(self.x - self.width / 2, 0, self.world.FLOOR_WIDTH - self.width)),
+                int(util.clamp(self.y - self.height / 2, 0, self.world.FLOOR_HEIGHT - self.height)))
+
+    def get_max_draw_pos(self):
+        return (min(self.x + int(math.ceil(self.width / 2)), self.world.FLOOR_WIDTH),
+                min(self.y + int(math.ceil(self.height / 2)), self.world.FLOOR_HEIGHT))
+
+    def render(self, renderer):
         """Render all the things in the world visible by this camera."""
-
-        # Draw all visible tiles (temporary implementation)
-        for i in range(0, world.FLOOR_HEIGHT):
-            for j in range(0, world.FLOOR_WIDTH):
-                tile = world.current_floor[i][j]
+        (draw_x, draw_y) = self.get_draw_start_pos()
+        (max_x, max_y) = self.get_max_draw_pos()
+        # Draw all visible tiles
+        for i in range(draw_y, max_y):
+            for j in range(draw_x, max_x):
+                tile = self.world.current_floor[i][j]
                 tile.render(j, i, renderer)
 
-        # Draw all visible gameplay objects (temporary implementation)
-        for e in world.current_floor_elements:
-            e.render(renderer)
+        # Draw all visible gameplay objects
+        for e in self.world.current_floor_elements:
+            if self.is_within_bounds(e.x, e.y):
+                e.render(renderer)

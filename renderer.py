@@ -26,5 +26,9 @@ class Renderer:
 
     def transform(self, camera):
         """Transform this Renderer's offset to match the camera."""
-        self.x_offset = -camera.x
-        self.y_offset = -camera.y
+        # Set offset to current camera position.
+        (self.x_offset, self.y_offset) = -camera.x, -camera.y
+
+        # Translate by draw offset
+        self.x_offset += int(camera.width / 2)
+        self.y_offset += int(camera.height / 2)

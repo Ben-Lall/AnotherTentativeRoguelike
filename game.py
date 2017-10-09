@@ -1,6 +1,7 @@
 from bearlibterminal import terminal as blt
 from player import Player
 from world import World
+import input
 import time
 
 
@@ -21,7 +22,7 @@ class Game:
         self.next_game_tick = self.elapsed_time()
 
         # Place the player
-        World.add_player(Player())
+        World.add_player(Player(World))
 
     def iterate(self):
         """Perform one iteration of the game loop."""
@@ -37,13 +38,17 @@ class Game:
 
     def update(self):
         """Update all game logic"""
-        pass
+
+        input.handle_input(World.active_player)
+
 
     def render(self, interpolation):
         """Render all on-screen objects."""
         blt.clear()
 
         World.active_player.render_screen(World)
+
+        blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
 
         blt.refresh()
 
