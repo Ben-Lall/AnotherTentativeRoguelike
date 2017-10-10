@@ -17,9 +17,9 @@ class Player(Creature):
     def render_screen(self, world):
         """Render everything visible to this player to the screen."""
         self.world_renderer.transform(self.camera)
-        self.camera.render(self.world_renderer)
+        world.render(self.camera, self.world_renderer)
 
-    def move(self, dx, dy):
+    def move(self, dx, dy, world):
         """Move the player and pan the camera to compensate."""
-        super().move(dx, dy)
+        super().move(dx, dy, world)
         self.camera.move_to(self.x, self.y)

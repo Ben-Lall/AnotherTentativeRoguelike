@@ -1,6 +1,4 @@
 from gameplay_object import GameplayObject
-import utilities as util
-
 
 class Creature(GameplayObject):
     """A living creature capable of living and dying."""
@@ -11,7 +9,8 @@ class Creature(GameplayObject):
     def render(self, renderer):
         super().render(renderer, 1)
 
-    def move(self, dx, dy):
-        if util.is_unobstructed(self.x + dx, self.y + dy):
+    def move(self, dx, dy, world):
+        target = (self.x + dx, self.y + dy)
+        if world.is_in_bounds(target[0], target[0]) and world.is_unobstructed(target[0], target[1]):
             self.x += dx
             self.y += dy
