@@ -8,10 +8,10 @@ from bearlibterminal import terminal as blt
 class Player(Creature):
     """A controllable player character."""
 
-    def __init__(self, world):
+    def __init__(self, pos, world_width, world_height):
         symbol = Symbol('@', blt.color_from_name("dark white"))
-        super().__init__(15, 15, symbol)
-        self.camera = Camera(self.x, self.y, world)
+        super().__init__(pos[0], pos[1], symbol)
+        self.camera = Camera(self.x, self.y, world_width, world_height)
         self.world_renderer = Renderer()
 
     def render_screen(self, world):

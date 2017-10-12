@@ -6,9 +6,9 @@ from bearlibterminal import terminal as blt
 class Camera:
     """A camera that is used for rendering a specific region."""
 
-    def __init__(self, x, y, world):
-        self.world_width = world.FLOOR_WIDTH
-        self.world_height = world.FLOOR_HEIGHT
+    def __init__(self, x, y, world_width, world_height):
+        self.world_width = world_width
+        self.world_height = world_height
         self.width = blt.state(blt.TK_WIDTH)
         self.height = blt.state(blt.TK_HEIGHT)
         self.x = x

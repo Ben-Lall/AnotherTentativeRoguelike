@@ -22,7 +22,8 @@ class Game:
 
         # Create world
         self.world = World()
-        self.world.add_player(Player(World))
+        start_pos = self.world.generate_floor()
+        self.world.add_player(Player(start_pos, self.world.FLOOR_WIDTH, self.world.FLOOR_HEIGHT))
 
     def iterate(self):
         """Perform one iteration of the game loop."""

@@ -15,9 +15,9 @@ class Tile:
         # background color
         if bkcolor is None:
             if blocked:
-                self.bkcolor = blt.color_from_argb(255, 0, 15, 120)
+                self.bkcolor = blt.color_from_argb(255, 0, 0, 70)
             else:
-                self.bkcolor = blt.color_from_argb(255, 0, 0, 12)
+                self.bkcolor = blt.color_from_argb(255, 0, 0, 30)
         else:
             self.bkcolor = bkcolor
 
@@ -30,3 +30,8 @@ class Tile:
             renderer.render_composite(x, y, self.symbol, 0, self.bkcolor)
         else:
             renderer.render(x, y, self.symbol, 0, self.bkcolor)
+
+    def unblock(self):
+        """Unblock this tile and change its color to match."""
+        self.blocked = False
+        self.bkcolor = self.bkcolor = blt.color_from_argb(255, 0, 0, 12)

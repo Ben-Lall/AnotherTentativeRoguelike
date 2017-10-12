@@ -1,7 +1,9 @@
 from tile import Tile
+import world_generator as gen
 
 FLOOR_WIDTH = 120
 FLOOR_HEIGHT = 120
+blueprint = 0
 
 
 class World:
@@ -10,14 +12,12 @@ class World:
     FLOOR_HEIGHT = FLOOR_HEIGHT
 
     def __init__(self):
-        self.current_floor = [[Tile(blocked=True) if (x in [0, FLOOR_WIDTH - 1] or y in [0, FLOOR_HEIGHT - 1]) else Tile(blocked=False) for x in range(FLOOR_WIDTH)] for y in
-                         range(FLOOR_HEIGHT)]
-        self.current_floor[15][14] = Tile(blocked=True)
-        self.current_floor[15][13] = Tile(blocked=True)
-        self.current_floor[16][14] = Tile(blocked=True)
-        self.current_floor[16][13] = Tile(blocked=True)
+        self.current_floor = [[Tile(blocked=True) for x in range(FLOOR_WIDTH)] for y in range(FLOOR_HEIGHT)]
         self.current_floor_elements = []
         self.active_player = None
+
+    def generate_floor(self):
+        return gen.generate_floor(self.current_floor)
 
     def add_player(self, player):
         """Add a playable creature to this world."""
@@ -27,7 +27,7 @@ class World:
 
     def is_in_bounds(self, x, y):
         """Check if the given coordinates are within the bounds of a floor."""
-        return 0 <= x < World.FLOOR_WIDTH and 0 <= y < World.FLOOR_HEIGHT
+        return 0 <= x < self.FLOOR_WIDTH and 0 <= y < self.FLOOR_HEIGHT
 
     def is_unobstructed(self, x, y):
         """Check if the given coordinates of the current floor is unobstructed."""
@@ -40,7 +40,8 @@ class World:
         # Draw all visible tiles
         for i in range(draw_y, max_y):
             for j in range(draw_x, max_x):
-                tile = self.current_floor[i][j]
+                # tile = self.current_floor[i][j]
+                tile = blueprint[i][j]
                 tile.render(j, i, renderer)
 
         # Draw all visible gameplay objects
