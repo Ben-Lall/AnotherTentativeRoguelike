@@ -1,8 +1,10 @@
 from tile import Tile
 import world_generator as gen
+from renderer import Renderer
+from bearlibterminal import terminal as blt
 
-FLOOR_WIDTH = 120
-FLOOR_HEIGHT = 120
+FLOOR_WIDTH = 100
+FLOOR_HEIGHT = 100
 blueprint = 0
 
 
@@ -40,8 +42,7 @@ class World:
         # Draw all visible tiles
         for i in range(draw_y, max_y):
             for j in range(draw_x, max_x):
-                # tile = self.current_floor[i][j]
-                tile = blueprint[i][j]
+                tile = self.current_floor[i][j]
                 tile.render(j, i, renderer)
 
         # Draw all visible gameplay objects
