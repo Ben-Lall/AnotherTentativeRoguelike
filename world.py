@@ -3,8 +3,8 @@ import world_generator as gen
 from renderer import Renderer
 from bearlibterminal import terminal as blt
 
-FLOOR_WIDTH = 100
-FLOOR_HEIGHT = 100
+FLOOR_WIDTH = 80
+FLOOR_HEIGHT = 60
 blueprint = 0
 
 
@@ -26,10 +26,6 @@ class World:
         self.current_floor_elements.append(player)
         if self.active_player is None:
             self.active_player = player
-
-    def is_in_bounds(self, x, y):
-        """Check if the given coordinates are within the bounds of a floor."""
-        return 0 <= x < self.FLOOR_WIDTH and 0 <= y < self.FLOOR_HEIGHT
 
     def is_unobstructed(self, x, y):
         """Check if the given coordinates of the current floor is unobstructed."""

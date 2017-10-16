@@ -3,12 +3,14 @@ from symbol import Symbol
 from renderer import Renderer
 from camera import Camera
 import world
+import utilities as util
+import pathfinding
 from bearlibterminal import terminal as blt
 import random as rand
 import math
 import time
 
-ANIMATE_WORLD_GEN = False
+ANIMATE_WORLD_GEN = True
 ANIMATION_FRAME_LENGTH = 500  # Measured in milliseconds
 ANIMATION_RENDERER = Renderer()
 ANIMATION_CAMERA = None
@@ -16,18 +18,18 @@ ANIMATION_CAMERA = None
 START_WIDTH = 11
 START_HEIGHT = 6
 
-MAX_ROOMS = 59  # Assume the start room has already been placed.
-MAX_ROOM_GENERATION_ATTEMPTS = 500
+MAX_ROOMS = 29  # Assume the start room has already been placed.
+MAX_ROOM_GENERATION_ATTEMPTS = 250
 
 
 class _GenTile:
     """A tile containing extra information needed strictly for world generation."""
-    def __init__(self, obstructed):
-        self.obstructed = obstructed
+    def __init__(self, blocked):
+        self.blocked = blocked
 
     def render(self, x, y, renderer):
         """Render this tile at the given world coordinates."""
-        if self.obstructed:
+        if self.blocked:
             bkcolor = blt.color_from_argb(255, 0, 0, 50)
         else:
             bkcolor = blt.color_from_argb(255, 0, 0, 30)
@@ -119,20 +121,20 @@ class _Room:
 
     def _draw_to_blueprint_from_openings(self, blueprint, world_openings, world_opening, room_opening):
         """Assumes no overlap between blueprint and T(x, y)(self.body), where T is the translation function.  Updates openings to reflect room addition."""
-        blueprint[world_opening[1]][world_opening[0]].obstructed = False
+        blueprint[world_opening[1]][world_opening[0]].blocked = False
         world_openings.remove(world_opening)
         self.draw_to_blueprint(blueprint, world_openings, world_opening[0] - room_opening[0], world_opening[1] - room_opening[1])
 
     def draw_to_blueprint(self, blueprint, openings, x, y):
         """Assumes no overlap between blueprint and T(x, y)(self.body), where T is the translation function.  Updates openings to reflect room addition."""
         for (p1, p2) in self.body:
-            blueprint[p2 + y][p1 + x].obstructed = False
-            # for o in [(o1, o2) for (o1, o2) in openings if o1 == p1 and o2 == p2]:
-            #     openings.remove(o)
+            blueprint[p2 + y][p1 + x].blocked = False
+            for o in [(o1, o2) for (o1, o2) in openings if o1 == p1 and o2 == p2]:
+                openings.remove(o)
 
         for (p1, p2) in self.openings:
             # Some openings may be obstructed since they lie outside of this.body
-            if _is_in_bounds(blueprint, p1 + x, p2 + y) and blueprint[p2 + y][p1 + x].obstructed:
+            if util.is_in_bounds(blueprint, p1 + x, p2 + y) and blueprint[p2 + y][p1 + x].blocked:
                 openings.add((p1 + x, p2 + y))
 
     def render(self, renderer):
@@ -158,6 +160,7 @@ def generate_floor(floor):
     _Room(_RoomType.START).draw_to_blueprint(blueprint, openings, start_x, start_y)
 
     _place_rooms(blueprint, openings)
+    _place_cycles(blueprint)
 
     _build_floor(blueprint, floor)
     start = int(len(floor[0]) / 2), len(floor) - 1
@@ -179,6 +182,25 @@ def _place_rooms(blueprint, openings):
 
         if ANIMATE_WORLD_GEN:
             _render_room(blueprint, openings, room, conjunction_point)
+
+
+def _place_cycles(blueprint):
+    """Place cycles in the world."""
+    minimum_acyclic_distance = 50
+    for (x, y) in [(x, y) for y in range(len(blueprint)) for x in range(len(blueprint[0]))]:
+        if blueprint[y][x].blocked:
+            if util.is_in_bounds(blueprint, x - 1, y) and not blueprint[y][x - 1].blocked and util.is_in_bounds(blueprint, x + 1, y) and not blueprint[y][x + 1].blocked:
+                n = pathfinding.pathing_distance(blueprint, (x - 1, y), (x + 1, y))
+                if n.distance > minimum_acyclic_distance:
+                    if ANIMATE_WORLD_GEN:
+                        _render_cycle(blueprint, n.to_path())
+                    blueprint[y][x].blocked = False
+            if util.is_in_bounds(blueprint, x, y - 1) and not blueprint[y - 1][x].blocked and util.is_in_bounds(blueprint, x, y + 1) and not blueprint[y + 1][x].blocked:
+                n = pathfinding.pathing_distance(blueprint, (x, y - 1), (x, y + 1))
+                if n.distance > minimum_acyclic_distance:
+                    if ANIMATE_WORLD_GEN:
+                        _render_cycle(blueprint, n.to_path())
+                    blueprint[y][x].blocked = False
 
 
 def _render_room(blueprint, openings, room, conjunction_point):
@@ -210,19 +232,38 @@ def _render_room(blueprint, openings, room, conjunction_point):
         ANIMATION_RENDERER.transform(ANIMATION_CAMERA)
 
 
-def _is_in_bounds(floor, x, y):
-    """Determine if the given coordinates are within the bounds of the floor."""
-    return 0 <= x < len(floor[0]) and 0 <= y < len(floor)
+def _render_cycle(blueprint, path):
+    blt.clear()
+    ANIMATION_CAMERA.move_to(path[0][0], path[0][1])
+    ANIMATION_RENDERER.transform(ANIMATION_CAMERA)
+
+    for y in range(len(blueprint)):
+        for x in range(len(blueprint[0])):
+            blueprint[y][x].render(x, y, ANIMATION_RENDERER)
+
+    for (x, y) in path:
+        ANIMATION_RENDERER.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, blt.color_from_argb(255, 160, 230, 160))
+
+    blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
+    blt.refresh()
+    time.sleep(ANIMATION_FRAME_LENGTH / 1000)
+
+    ANIMATION_CAMERA.move_to(0, 0)
+    ANIMATION_RENDERER.transform(ANIMATION_CAMERA)
 
 
 def _valid_placement_pos(blueprint, pos):
     x, y = pos[0], pos[1]
-    if not _is_in_bounds(blueprint, x, y) or not blueprint[y][x].obstructed:
+    if not util.is_in_bounds(blueprint, x, y) or not blueprint[y][x].blocked:
         return False
     for i in range(-1, 2, 2):
-        if _is_in_bounds(blueprint, x, y + i) and not blueprint[y + i][x].obstructed:
+        if util.is_in_bounds(blueprint, x, y + i) and not blueprint[y + i][x].blocked:
             return False
-        if _is_in_bounds(blueprint, x + i, y) and not blueprint[y][x + i].obstructed:
+        if util.is_in_bounds(blueprint, x + i, y) and not blueprint[y][x + i].blocked:
+            return False
+        if util.is_in_bounds(blueprint, x + i, y - 1) and not blueprint[y - 1][x + i].blocked:
+            return False
+        if util.is_in_bounds(blueprint, x + i, y + 1) and not blueprint[y + 1][x + i].blocked:
             return False
     return True
 
@@ -232,5 +273,5 @@ def _build_floor(blueprint, floor):
     Tiles."""
     for i in range(len(blueprint)):
         for j in range(len(blueprint[0])):
-            if not blueprint[j][i].obstructed:
-                floor[j][i].unblock()
+            if not blueprint[i][j].blocked:
+                floor[i][j].unblock()
