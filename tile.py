@@ -17,7 +17,7 @@ class Tile:
             if blocked:
                 self.bkcolor = blt.color_from_argb(255, 0, 0, 70)
             else:
-                self.bkcolor = blt.color_from_argb(255, 0, 0, 30)
+                self.bkcolor = blt.color_from_argb(255, 0, 0, 50)
         else:
             self.bkcolor = bkcolor
 

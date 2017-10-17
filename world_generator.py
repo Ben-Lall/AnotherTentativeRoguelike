@@ -10,7 +10,7 @@ import random as rand
 import math
 import time
 
-ANIMATE_WORLD_GEN = True
+ANIMATE_WORLD_GEN = False
 ANIMATION_FRAME_LENGTH = 500  # Measured in milliseconds
 ANIMATION_RENDERER = Renderer()
 ANIMATION_CAMERA = None
