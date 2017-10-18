@@ -13,3 +13,6 @@ WALL_FADED = blt.color_from_argb(255, 14, 7, 0)
 WORLD_GEN_OPENING = blt.color_from_argb(255, 0, 120, 0)
 WORLD_GEN_HIGHLIGHT = blt.color_from_argb(255, 153, 102, 51)
 WORLD_GEN_CYCLE = blt.color_from_argb(255, 160, 230, 160)
+
+# Creature colors
+ORC = blt.color_from_argb(255, 20, 120, 0)

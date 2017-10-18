@@ -24,7 +24,8 @@ class Game:
         # Create world
         self.world = World()
         start_pos = self.world.generate_floor()
-        self.world.add_player(Player(start_pos, self.world.FLOOR_WIDTH, self.world.FLOOR_HEIGHT))
+        self.world.add_player(Player(start_pos, self.world))
+        self.render()
 
     def iterate(self):
         """Perform one iteration of the game loop."""
@@ -33,6 +34,9 @@ class Game:
 
     def update(self):
         """Update all game logic"""
+        for c in (c for c in self.world.current_floor_creatures if c != self.world.active_player):
+            c.take_turn(self.world)
+
         input.handle_input(self.world.active_player, self.world)
         self.world.active_player.update_memory_map(self.world)
 

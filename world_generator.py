@@ -11,7 +11,7 @@ import random as rand
 import math
 import time
 
-ANIMATE_WORLD_GEN = True
+ANIMATE_WORLD_GEN = False
 ANIMATION_FRAME_LENGTH = 250  # Measured in milliseconds
 ANIMATION_RENDERER = Renderer()
 ANIMATION_CAMERA = None
@@ -49,8 +49,9 @@ class _RoomType(Enum):
     RANDOM = 100
 
     @staticmethod
-    def generic_rooms():
-        """Returns a list of generic, non-unique room types, along with a weight."""
+    def get_generic_rooms():
+        """Returns a list of generic, non-unique room types, along with a weight.
+        Each element is a tuple of the form (weight, room_type)"""
         return [(0.5, _RoomType.RECTANGLE), (0.4, _RoomType.CONJOINED_RECTANGLE), (0.1, _RoomType.TORUS)]
 
 
@@ -67,9 +68,10 @@ class _Room:
         self.openings = set()  # A set containing the openings of this room.  self.body ∩ self.openings = ∅
 
         if room_type == _RoomType.RANDOM:
+            # Pick a random room type depending on weights
             weight = rand.random()
             weight_total = 0
-            for room in _RoomType.generic_rooms():
+            for room in _RoomType.get_generic_rooms():
                 weight_total += room[0]
                 if weight_total >= weight:
                     room_type = room[1]
@@ -159,7 +161,8 @@ class _Room:
         """Add this room to the given blueprint, if possible.  Returns the point of conjunction, if it is added."""
 
         # get a set of pairs of openings containing the pairs of world and self openings that would accomodate this room.
-        # i.e.  return o ∈ (world_openings × self.openings) : the open tiles of blueprint and self.body contain no overlap if both elements of o were to be overlapped."""
+        # i.e.  return o ∈ (world_openings × self.openings) : the open tiles of blueprint and self.body contain no overlap
+        # if both elements of o were to be overlapped."""
         valid_opening_pairs = []
         for (wox, woy) in world_openings:
             for (rox, roy) in self.openings:
@@ -223,8 +226,6 @@ def generate_floor(floor):
     _place_rooms(blueprint, openings)
     _place_cycles(blueprint)
     _pad_edges(blueprint)
-    blueprint[45][39].blocked = True
-    blueprint[47][41].blocked = True
 
     _build_floor(blueprint, floor)
     start = int(len(floor[0]) / 2), len(floor) - 2
@@ -254,13 +255,13 @@ def _place_cycles(blueprint):
     for (x, y) in [(x, y) for y in range(len(blueprint)) for x in range(len(blueprint[0]))]:
         if blueprint[y][x].blocked:
             if util.is_in_bounds(blueprint, x - 1, y) and not blueprint[y][x - 1].blocked and util.is_in_bounds(blueprint, x + 1, y) and not blueprint[y][x + 1].blocked:
-                n = pathfinding.pathing_distance(blueprint, (x - 1, y), (x + 1, y))
+                n = pathfinding.get_path(blueprint, (x - 1, y), (x + 1, y))
                 if n.distance > minimum_acyclic_distance:
                     if ANIMATE_WORLD_GEN:
                         _render_cycle(blueprint, n.to_path())
                     blueprint[y][x].blocked = False
             if util.is_in_bounds(blueprint, x, y - 1) and not blueprint[y - 1][x].blocked and util.is_in_bounds(blueprint, x, y + 1) and not blueprint[y + 1][x].blocked:
-                n = pathfinding.pathing_distance(blueprint, (x, y - 1), (x, y + 1))
+                n = pathfinding.get_path(blueprint, (x, y - 1), (x, y + 1))
                 if n.distance > minimum_acyclic_distance:
                     if ANIMATE_WORLD_GEN:
                         _render_cycle(blueprint, n.to_path())

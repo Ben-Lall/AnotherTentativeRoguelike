@@ -31,7 +31,17 @@ class _AStarNode:
         return path
 
 
-def pathing_distance(floor, start, target):
+def get_next_tile(floor, start, target):
+    """Get the next tile to move to to reach the target from the start."""
+    n = get_path(floor, target, start)
+    if n.parent is None:
+        return start
+    else:
+        return n.parent.x, n.parent.y
+
+
+def get_path(floor, start, target):
+    """Get the optimal path to the target from the start."""
     sx, sy = start[0], start[1]
     expanded = [[False for x in range(len(floor[0]))] for y in range(len(floor))]
     start_node = _AStarNode(sx, sy, 0, util.euc_distance(start, target), None)
