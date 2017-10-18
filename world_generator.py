@@ -5,6 +5,7 @@ from camera import Camera
 import world
 import utilities as util
 import pathfinding
+import colors
 from bearlibterminal import terminal as blt
 import random as rand
 import math
@@ -30,9 +31,9 @@ class _GenTile:
     def render(self, x, y, renderer):
         """Render this tile at the given world coordinates."""
         if self.blocked:
-            bkcolor = blt.color_from_argb(255, 0, 0, 50)
+            bkcolor = colors.WALL
         else:
-            bkcolor = blt.color_from_argb(255, 0, 0, 30)
+            bkcolor = colors.FLOOR
         renderer.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, bkcolor)
 
 
@@ -139,7 +140,7 @@ class _Room:
 
     def render(self, renderer):
         for tile in self.body:
-            renderer.render(10 + tile[0], 5 + tile[1], Symbol(' ', blt.color_from_name("white")), 0, blt.color_from_argb(255, 0, 0, 30))
+            renderer.render(10 + tile[0], 5 + tile[1], Symbol(' ', blt.color_from_name("white")), 0, colors.FLOOR)
         for opening in self.openings:
             renderer.render(10 + opening[0], 5 + opening[1], Symbol('V', blt.color_from_name("white")), 0, blt.color_from_argb(255, 0, 120, 0))
 

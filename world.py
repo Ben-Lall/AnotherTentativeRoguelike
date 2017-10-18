@@ -31,13 +31,10 @@ class World:
         """Check if the given coordinates of the current floor is unobstructed."""
         return not self.current_floor[y][x].blocked
 
-    def render(self, camera, renderer, fov_map):
+    def render(self, camera, renderer, memory_map, fov_map):
         """Render the portion of the world visible by the given camera"""
-        # Draw all visible tiles
-        # for i in range(FLOOR_HEIGHT):
-        #     for j in range(FLOOR_WIDTH):
-        #         tile = self.current_floor[i][j]
-        #         tile.render(j, i, renderer)
+
+        # Draw all tiles currently in the player's field of vision with no modifications.
         for (j, i) in fov_map:
             tile = self.current_floor[i][j]
             tile.render(j, i, renderer)

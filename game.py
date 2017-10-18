@@ -32,8 +32,8 @@ class Game:
 
     def update(self):
         """Update all game logic"""
-
         input.handle_input(self.world.active_player, self.world)
+        self.world.active_player.update_memory_map(self.world)
 
     def render(self):
         """Render all on-screen objects."""
