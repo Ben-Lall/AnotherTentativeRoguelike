@@ -1,6 +1,7 @@
 from bearlibterminal import terminal as blt
 from player import Player
 from world import World
+import colors
 import input
 
 
@@ -18,7 +19,7 @@ class Game:
         blt.refresh()
 
         # Set up the terminal
-        blt.set("window: title='Roguelike', cellsize=12x12, resizeable=true, minimum-size=27x5; ini.settings.tile-size=16;")
+        blt.set("window: title='Roguelike', cellsize=12x12, resizeable=true, size=80x45, minimum-size=27x5; ini.settings.tile-size=16;")
 
         # Create world
         self.world = World()
@@ -41,6 +42,6 @@ class Game:
 
         self.world.active_player.render_screen(self.world)
 
-        blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
+        blt.bkcolor(colors.CLEAR)
 
         blt.refresh()

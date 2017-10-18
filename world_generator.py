@@ -28,13 +28,16 @@ class _GenTile:
     def __init__(self, blocked):
         self.blocked = blocked
 
-    def render(self, x, y, renderer):
+    def render(self, x, y, renderer, bkcolor=None):
         """Render this tile at the given world coordinates."""
-        if self.blocked:
-            bkcolor = colors.WALL
+        if bkcolor is None:
+            if self.blocked:
+                color = colors.WALL
+            else:
+                color = colors.FLOOR
         else:
-            bkcolor = colors.FLOOR
-        renderer.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, bkcolor)
+            color = bkcolor
+        renderer.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, color)
 
 
 class _RoomType(Enum):
@@ -141,9 +144,9 @@ class _Room:
 
     def render(self, renderer):
         for tile in self.body:
-            renderer.render(10 + tile[0], 5 + tile[1], Symbol(' ', blt.color_from_name("white")), 0, colors.FLOOR)
+            renderer.render(10 + tile[0], 5 + tile[1], Symbol(' ', blt.color_from_name("white")), 0, colors.WORLD_GEN_HIGHLIGHT)
         for opening in self.openings:
-            renderer.render(10 + opening[0], 5 + opening[1], Symbol('V', blt.color_from_name("white")), 0, blt.color_from_argb(255, 0, 120, 0))
+            renderer.render(10 + opening[0], 5 + opening[1], Symbol('V', blt.color_from_name("white")), 0, colors.WORLD_GEN_OPENING)
 
 
 def generate_floor(floor):
@@ -221,7 +224,7 @@ def _render_room(blueprint, openings, room, conjunction_point):
     # Draw the currently pending room
     blt.clear()
     room.render(ANIMATION_RENDERER)
-    blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
+    blt.bkcolor(colors.CLEAR)
     blt.refresh()
     time.sleep(ANIMATION_FRAME_LENGTH / 1000)
 
@@ -237,8 +240,8 @@ def _render_room(blueprint, openings, room, conjunction_point):
                 blueprint[y][x].render(x, y, ANIMATION_RENDERER)
 
         for (x, y) in openings:
-            ANIMATION_RENDERER.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, blt.color_from_argb(255, 0, 120, 0))
-        blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
+            ANIMATION_RENDERER.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, colors.WORLD_GEN_OPENING)
+        blt.bkcolor(colors.CLEAR)
         blt.refresh()
         time.sleep(ANIMATION_FRAME_LENGTH / 1000)
 
@@ -256,9 +259,9 @@ def _render_cycle(blueprint, path):
             blueprint[y][x].render(x, y, ANIMATION_RENDERER)
 
     for (x, y) in path:
-        ANIMATION_RENDERER.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, blt.color_from_argb(255, 160, 230, 160))
+        ANIMATION_RENDERER.render(x, y, Symbol(' ', blt.color_from_name("white")), 0, colors.WORLD_GEN_CYCLE)
 
-    blt.bkcolor(blt.color_from_argb(255, 0, 0, 0))
+    blt.bkcolor(colors.CLEAR)
     blt.refresh()
     time.sleep(ANIMATION_FRAME_LENGTH / 1000)
 
