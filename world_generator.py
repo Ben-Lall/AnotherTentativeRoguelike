@@ -11,8 +11,8 @@ import random as rand
 import math
 import time
 
-ANIMATE_WORLD_GEN = False
-ANIMATION_FRAME_LENGTH = 500  # Measured in milliseconds
+ANIMATE_WORLD_GEN = True
+ANIMATION_FRAME_LENGTH = 250  # Measured in milliseconds
 ANIMATION_RENDERER = Renderer()
 ANIMATION_CAMERA = None
 
@@ -43,39 +43,72 @@ class _GenTile:
 class _RoomType(Enum):
     """Enumerator cataloguing the different shapes of rooms."""
     RECTANGLE = 0
+    CONJOINED_RECTANGLE = 1
+    TORUS = 2
     START = 60
     RANDOM = 100
 
     @staticmethod
     def generic_rooms():
-        """Returns a list of generic, non-unique room types."""
-        return [_RoomType.RECTANGLE]
+        """Returns a list of generic, non-unique room types, along with a weight."""
+        return [(0.5, _RoomType.RECTANGLE), (0.4, _RoomType.CONJOINED_RECTANGLE), (0.1, _RoomType.TORUS)]
 
 
 class _Room:
     """A set of points, with some being potential openings.  A in a room point exists on an abstract canvas, and only serve
     to provide relative positioning to other points."""
+    RECTANGLE_WIDTH_RANGE = (6, 12)
+    RECTANGLE_HEIGHT_RANGE = (5, 10)
+    TORUS_INNER_RADIUS_RANGE = (1, 2)
+    TORUS_RING_WIDTH_RANGE = (3, 6)
 
     def __init__(self, room_type=_RoomType.RANDOM):
         self.body = set()  # A set of points that make up this room.
         self.openings = set()  # A set containing the openings of this room.  self.body ∩ self.openings = ∅
 
         if room_type == _RoomType.RANDOM:
-            room_type = rand.choice(_RoomType.generic_rooms())
+            weight = rand.random()
+            weight_total = 0
+            for room in _RoomType.generic_rooms():
+                weight_total += room[0]
+                if weight_total >= weight:
+                    room_type = room[1]
+                    break
 
         if room_type == _RoomType.RECTANGLE:
-            self.__add_rectangle(0, 0)
+            width = rand.randint(self.RECTANGLE_WIDTH_RANGE[0], self.RECTANGLE_WIDTH_RANGE[1])
+            height = rand.randint(self.RECTANGLE_HEIGHT_RANGE[0], self.RECTANGLE_HEIGHT_RANGE[1])
+            self.__add_rectangle(0, 0, width, height)
+        elif room_type == _RoomType.CONJOINED_RECTANGLE:
+            # Draw first rectangle
+            width = rand.randint(self.RECTANGLE_WIDTH_RANGE[0], self.RECTANGLE_WIDTH_RANGE[1])
+            height = rand.randint(self.RECTANGLE_HEIGHT_RANGE[0], self.RECTANGLE_HEIGHT_RANGE[1])
+            self.__add_rectangle(0, 0, width, height)
+            # Draw a second, overlapping rectangle
+            second_width = rand.randint(self.RECTANGLE_WIDTH_RANGE[0], self.RECTANGLE_WIDTH_RANGE[1])
+            second_height = rand.randint(self.RECTANGLE_HEIGHT_RANGE[0], self.RECTANGLE_HEIGHT_RANGE[1])
+            x = rand.randint(-second_width + 1, width - 1)
+            y = rand.randint(-second_height + 1, height - 1)
+            self.__add_rectangle(x, y, second_width, second_height)
+        elif room_type == _RoomType.TORUS:
+            inner_radius = rand.randint(self.TORUS_INNER_RADIUS_RANGE[0], self.TORUS_INNER_RADIUS_RANGE[1])
+            ring_width = rand.randint(self.TORUS_RING_WIDTH_RANGE[0], self.TORUS_RING_WIDTH_RANGE[1])
+            self.__add_torus(inner_radius, ring_width)
+
         elif room_type == _RoomType.START:
             self.__add_start()
 
-    def __add_rectangle(self, x, y):
+    def __add_rectangle(self, x, y, width, height):
         """Overlap a rectangle starting at the given coordinates to this room."""
-        width = rand.randint(6, 12)
-        height = rand.randint(5, 10)
         for i in range(y, y + height):
             for j in range(x, x + width):
                 self.body.add((j, i))
                 if (j, i) in self.openings: self.openings.remove((j, i))
+
+        # Remove any openings that may be covered by this rectangle
+        for p in self.openings:
+            if p in self.body:
+                self.openings.remove(p)
 
         # Add new openings
 
@@ -89,6 +122,29 @@ class _Room:
         exit_pos = (x - 1, y + rand.randint(1, height - 2))
         if exit_pos not in self.body: self.openings.add(exit_pos)
         exit_pos = (x + width, y + rand.randint(1, height - 2))
+        if exit_pos not in self.body: self.openings.add(exit_pos)
+
+    def __add_torus(self, inner_radius, ring_width):
+        for y in range(inner_radius + ring_width + 2):
+            for x in range(inner_radius + ring_width + 2):
+                if inner_radius ** 2 < x ** 2 + y ** 2 < (inner_radius + ring_width) ** 2:
+                    self.body.add((x, y))
+                    self.body.add((-x, y))
+                    self.body.add((x, -y))
+                    self.body.add((-x, -y))
+        # Add openings
+        # Top / bottom side
+        min_inner, max_inner = int(-inner_radius), int(inner_radius)
+        min_outer, max_outer = int(-inner_radius/2 - ring_width), int(inner_radius/2 + ring_width)
+        exit_pos = (rand.randint(min_inner, max_inner), min_outer - 1)
+        if exit_pos not in self.body: self.openings.add(exit_pos)
+        exit_pos = (rand.randint(min_inner, max_inner), max_outer + 1)
+        if exit_pos not in self.body: self.openings.add(exit_pos)
+
+        # Left / right side
+        exit_pos = (min_outer - 1, rand.randint(min_inner, max_inner))
+        if exit_pos not in self.body: self.openings.add(exit_pos)
+        exit_pos = (max_outer + 1, rand.randint(min_inner, max_inner))
         if exit_pos not in self.body: self.openings.add(exit_pos)
 
     def __add_start(self):
@@ -167,6 +223,8 @@ def generate_floor(floor):
     _place_rooms(blueprint, openings)
     _place_cycles(blueprint)
     _pad_edges(blueprint)
+    blueprint[45][39].blocked = True
+    blueprint[47][41].blocked = True
 
     _build_floor(blueprint, floor)
     start = int(len(floor[0]) / 2), len(floor) - 2
