@@ -106,6 +106,7 @@ class _Room:
             for (rox, roy) in self.openings:
                 # Test if this pair yields a placeable room that would not overlap or be adjacent to an existing room.
                 placeable = True
+                # Translate each tile of the body to the real world, and check that they are all a valid cell for placement.
                 for (x, y) in self.body:
                     projected_tile = x - rox + wox, y - roy + woy
                     if not _valid_placement_pos(blueprint, projected_tile):
@@ -157,14 +158,15 @@ def generate_floor(floor):
 
     # Add start
     start_x = int((len(floor[0]) - START_WIDTH) / 2)
-    start_y = len(floor) - START_HEIGHT
+    start_y = len(floor) - START_HEIGHT - 1
     _Room(_RoomType.START).draw_to_blueprint(blueprint, openings, start_x, start_y)
 
     _place_rooms(blueprint, openings)
     _place_cycles(blueprint)
+    _pad_edges(blueprint)
 
     _build_floor(blueprint, floor)
-    start = int(len(floor[0]) / 2), len(floor) - 1
+    start = int(len(floor[0]) / 2), len(floor) - 2
     return start
 
 
@@ -202,6 +204,17 @@ def _place_cycles(blueprint):
                     if ANIMATE_WORLD_GEN:
                         _render_cycle(blueprint, n.to_path())
                     blueprint[y][x].blocked = False
+
+
+def _pad_edges(blueprint):
+    """Pad the edges of the floor with walls, ensuring that there are no floor tiles adjacent to the edge of the world."""
+    x_max, y_max = len(blueprint[0]), len(blueprint)
+    for y in range(y_max):
+        blueprint[y][0].blocked = True
+        blueprint[y][x_max - 1].blocked = True
+    for x in range(x_max):
+        blueprint[0][x].blocked = True
+        blueprint[y_max - 1][x].blocked = True
 
 
 def _render_room(blueprint, openings, room, conjunction_point):

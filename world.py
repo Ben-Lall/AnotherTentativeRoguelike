@@ -4,7 +4,7 @@ from renderer import Renderer
 from bearlibterminal import terminal as blt
 
 FLOOR_WIDTH = 80
-FLOOR_HEIGHT = 60
+FLOOR_HEIGHT = 50
 blueprint = 0
 
 

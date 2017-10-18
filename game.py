@@ -18,7 +18,7 @@ class Game:
         blt.refresh()
 
         # Set up the terminal
-        blt.set("window.title='Roguelike';ini.settings.tile-size=16")
+        blt.set("window: title='Roguelike', cellsize=12x12, resizeable=true, minimum-size=27x5; ini.settings.tile-size=16;")
 
         # Create world
         self.world = World()

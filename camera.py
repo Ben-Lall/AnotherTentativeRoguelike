@@ -38,3 +38,8 @@ class Camera:
     def get_max_draw_pos(self):
         return (min(self.x + int(math.ceil(self.width / 2)), self.world_width),
                 min(self.y + int(math.ceil(self.height / 2)), self.world_height))
+
+    def resize(self, new_width, new_height):
+        self.width = new_width
+        self.height = new_height
+        self.pan(0, 0)

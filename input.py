@@ -11,6 +11,14 @@ def handle_key(player, world):
     """Handle this player's next input key."""
     key = blt.read()
 
+    if key == blt.TK_CLOSE:
+        exit()
+
+    if key == blt.TK_RESIZED:
+        w = blt.state(blt.TK_WIDTH)
+        h = blt.state(blt.TK_HEIGHT)
+        player.camera.resize(w, h)
+
     # NESW Movement
     if key == blt.TK_KP_8:
         player.move(0, -1, world)
